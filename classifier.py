@@ -17,6 +17,13 @@ class Classifier(object):
                 self.k = int(fr.readline())
         else:
             self.k = 3
+        if os.path.exists('maxNum'):
+            with open('maxNum') as fr:
+                self.maxNum = int(fr.readline())
+        else:
+            self.maxNum = self.getMaxNum()
+            with open('maxNum', 'w') as fr:
+                fr.write(str(self.maxNum))
     def createLib(self, imgDir):
         imgList = os.listdir(imgDir)
         vectorDir = imgDir.split('_')[0]
@@ -39,6 +46,9 @@ class Classifier(object):
                     with open(fullVectorPath + '/' + str(labelCounter[label]), 'w') as f:
                         for num in vector:
                             f.write(str(num))
+        if os.path.exists('maxNum'):
+            os.remove('maxNum')
+            self.getMaxNum()
     def readFile(self, fileNameStr):
         returnMat = zeros((1,324))
         with open(fileNameStr) as f:
@@ -50,13 +60,22 @@ class Classifier(object):
         trainingFileList = []
         self.labels = []
         for label in os.listdir('training'):
+            loadNum = 0
             for each in os.listdir('training/' + label):
                 trainingFileList.append('training/' + label + '/' + each)
                 self.labels.append(label)
+                loadNum += 1
+                if loadNum >= self.maxNum:
+                    break
         m = len(trainingFileList)
         self.trainingMat = zeros((m, 324))
         for i in range(m):
             self.trainingMat[i, :] = self.readFile(trainingFileList[i])
+    def getMaxNum(self):
+        numList = []
+        for label in os.listdir('training'):
+            numList.append(len(os.listdir('training/' + label)))
+        return max(numList)
     def checkCodeTest(self):
         testFileList = []
         errorCount = 0
