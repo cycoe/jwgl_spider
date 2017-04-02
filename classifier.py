@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 class Classifier(object):
     def __init__(self):
-        self.createLib('training_ori')
+        #self.createLib('training_ori')
         #self.createLib('testing_ori')
         if os.path.exists('k'):
             with open('k') as fr:

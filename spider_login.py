@@ -60,6 +60,7 @@ try:
     result = response.read().decode('gb2312')
     print(response.geturl())
     print(result)
+    print(response.getcode())
 
 except urllib.request.HTTPError as e:
     print(e.code)
