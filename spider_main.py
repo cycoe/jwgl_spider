@@ -43,10 +43,7 @@ class Spider(object):
 
     def getVIEWSTATE(self):
         import re
-        from bs4 import BeautifulSoup
-        soup = BeautifulSoup(self.response.text, "html.parser")
-        print(re.findall('<.*name="__VIEWSTATE".*value="(.*)?".*/>', str(soup.input))[0])
-        return re.findall('<.*name="__VIEWSTATE".*value="(.*)?".*/>', str(soup.input))[0]
+        return re.findall('<.*name="__VIEWSTATE".*value="(.*)?".*/>', self.response.text)[0]
 
     def prepareJwglFirst(self):
         headers = self.formatHeaders()
@@ -137,8 +134,14 @@ class Spider(object):
 
     def getGrade(self):
         self.response = self.session.send(self.prepareGetGrade(), timeout=5)
-        self.response = self.session.send(self.preparePastGrade(), timeout=5, allow_redirects=False)
-        print(self.response.text)
+        self.response = self.session.send(self.preparePastGrade(), timeout=5)
+        gradeBody = self.response.text
+        self.formatGrade(gradeBody)
+
+    def formatGrade(self, gradeBody):
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(gradeBody, 'html.parser')
+        print(soup.br.table)
 
     def clean(self):
         self.session.close()
