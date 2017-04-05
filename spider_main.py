@@ -11,9 +11,9 @@ class Spider(object):
         self.getGradeUrl = "http://jwgl.buct.edu.cn/xscjcx.aspx"        #成绩获取地址
         self.getScheduleUrl = "http://jwgl.buct.edu.cn/xskbcx.aspx"     #课程表获取地址
         self.postClassUrl = "http://jwgl.buct.edu.cn/xsxk.aspx"         #选课地址
-        self.studentID = '2013012433'#学号
-        self.username = '朱浩南'#姓名
-        self.jwglPassword = 'zhn1106'#教务网密码
+        self.studentID = #学号
+        self.username = #姓名
+        self.jwglPassword = #教务网密码
         self.major = '0202高分子材料与工程'
 
         self.session = requests.Session()       #实例化 session 对象
