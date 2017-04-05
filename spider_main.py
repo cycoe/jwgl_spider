@@ -9,9 +9,12 @@ class Spider(object):
         self.verifyCodeUrl = "http://jwgl.buct.edu.cn/CheckCode.aspx"   #验证码获取地址
         self.jwglLoginUrl = "http://jwgl.buct.edu.cn/default2.aspx"     #教务网登录地址
         self.getGradeUrl = "http://jwgl.buct.edu.cn/xscjcx.aspx"        #成绩获取地址
-        self.studentID = #学号
-        self.username = #姓名
-        self.jwglPassword = #教务网密码
+        self.getScheduleUrl = "http://jwgl.buct.edu.cn/xskbcx.aspx"     #课程表获取地址
+        self.postClassUrl = "http://jwgl.buct.edu.cn/xsxk.aspx"         #选课地址
+        self.studentID = '2013012433'#学号
+        self.username = '朱浩南'#姓名
+        self.jwglPassword = 'zhn1106'#教务网密码
+        self.major = '0202高分子材料与工程'
 
         self.session = requests.Session()       #实例化 session 对象
         self.response = self.session.send(self.prepareJwglFirst(), timeout=5)   # GET 方法获取登录网站的 '__VIEWSTATE'
@@ -102,6 +105,61 @@ class Spider(object):
         req = Request('POST', self.getGradeUrl, headers=headers, params=params, data=postdata)
         return self.session.prepare_request(req)
 
+    def prepareSchedule(self):
+        headers = self.formatHeaders(self.response.url)
+        params = {
+            'xh': self.studentID,
+            'xm': self.username,
+            'gnmkdm': 'N121603',
+        }
+        req = Request('GET', self.getScheduleUrl, headers=headers, params=params)
+        return self.session.prepare_request(req)
+
+    def preparePastSchedule(self, xn_, xq_):
+        headers = self.formatHeaders(self.response.url)
+        params = {
+            'xh': self.studentID,
+            'xm': self.username,
+            'gnmkdm': 'N121603',
+        }
+        postdata = {
+            '__EVENTTARGET': 'xnd',
+            '__EVENTARGUMENT': '',
+            '__VIEWSTATE': self.getVIEWSTATE(),         #此参数非常重要，通过函数从当前网页源代码获取
+            'xnd': xn_,
+            'xqd': xq_,
+        }
+        req = Request('POST', self.getScheduleUrl, headers=headers, params=params, data=postdata)
+        return self.session.prepare_request(req)
+
+    def prepareClass(self):
+        headers = self.formatHeaders(self.response.url)
+        params = {
+            'xh': self.studentID,
+            'xm': self.username,
+            'gnmkdm': 'N121101',
+        }
+        req = Request('GET', self.postClassUrl, headers=headers, params=params)
+        return self.session.prepare_request(req)
+
+    def prepareGetClass(self):
+        headers = self.formatHeaders(self.response.url)
+        params = {
+            'xh': self.studentID,
+            'xm': self.username,
+            'gnmkdm': 'N121101',
+        }
+        postdata = {
+            '__EVENTTARGET': '',
+            '__EVENTARGUMENT': '',
+            '__VIEWSTATE': self.getVIEWSTATE(),         #此参数非常重要，通过函数从当前网页源代码获取
+            'DrDl_Nj': self.studentID[:4],
+            'zymc': self.major + '主修专业||' + self.studentID[:4],
+            'xx': '',
+            'Button5': '本专业选课'
+        }
+        req = Request('POST', self.postClassUrl, headers=headers, params=params, data=postdata)
+        return self.session.prepare_request(req)
 
     def jwglLogin(self, tryNum=10):
         """
@@ -138,32 +196,46 @@ class Spider(object):
         """
         self.response = self.session.send(self.prepareGetGrade(), timeout=5)
         self.response = self.session.send(self.preparePastGrade(), timeout=5)
-        self.formatGrade(self.response.text)
+        gradeMat = self.formatTable(self.response.text)
+        gradeMat = [[row[i] for i in range(len(row)) if i in self.remainList] for row in gradeMat]
+        self.outputTable(gradeMat, outputPath='grade.md')
 
-    def outputGrade(self):
+    def getPastSchedule(self, xn_ ,xq_):
+        self.response = self.session.send(self.prepareSchedule(), timeout=5)
+        self.response = self.session.send(self.preparePastSchedule(xn_, xq_), timeout=5)
+        scheduleMat = self.formatTable(self.response.text)
+        with open('schedule.md', 'w') as fr:
+            fr.write(str(scheduleMat))
+        #self.outputTable(scheduleMat, outputPath='schedule.md')
+
+    def getClassList(self):
+        self.response = self.session.send(self.prepareClass(), timeout=5)
+        self.response = self.session.send(self.prepareGetClass(), timeout=5)
+
+    def outputTable(self, tableMat, outputPath):
         """
         将成绩输出成 md 格式
         """
-        self.gradeMat.insert(1, [':------' for i in range(len(self.gradeMat[0]))])
-        with open('grade.md', 'w') as fr:
-            for row in self.gradeMat:
+        tableMat.insert(1, [':------' for i in range(len(tableMat[0]))])
+        with open(outputPath, 'w') as fr:
+            for row in tableMat:
                 fr.write('|')
                 for each in row:
                     fr.write(each)
                     fr.write('|')
                 fr.write('\n')
 
-    def formatGrade(self, gradeBody):
+    def formatTable(self, tableBody):
         """
         将抓取到的成绩解析成列表
         """
         from bs4 import BeautifulSoup
         import re
-        soup = BeautifulSoup(gradeBody, 'html.parser')
-        gradeRow = soup.br.table.find_all('tr')
-        gradeMat = [i.find_all('td') for i in gradeRow]
-        self.gradeMat = [[each.get_text().strip() for each in row] for row in gradeMat]
-        self.gradeMat = [[row[i] for i in range(len(row)) if i in self.remainList] for row in self.gradeMat]
+        soup = BeautifulSoup(tableBody, 'html.parser')
+        return soup.br.table
+        tableRow = soup.br.table.find_all('tr')
+        tableMat = [i.find_all('td') for i in tableRow]
+        return [[each.get_text().strip() for each in row] for row in tableMat]
 
     def clean(self):
         """
@@ -185,8 +257,7 @@ class VerifyError(Exception):
 def main():
     spider = Spider()
     spider.jwglLogin(tryNum=10)
-    spider.getPastGrade()
-    spider.outputGrade()
+    spider.getPastSchedule('2014-2015', '2')
     spider.clean()
 
 if __name__ == "__main__":
