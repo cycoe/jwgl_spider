@@ -21,6 +21,8 @@ class Spider(object):
         self.classifier = Classifier()
         self.classifier.loadTrainingMat()
 
+        self.remainList = [0, 1, 3, 4, 6, 7, 8, 10, 11, 12, 14]
+
     def formatHeaders(self, referer=None):
         """
         生成请求的 headers，referer 参数的默认值为 None
@@ -161,6 +163,7 @@ class Spider(object):
         gradeRow = soup.br.table.find_all('tr')
         gradeMat = [i.find_all('td') for i in gradeRow]
         self.gradeMat = [[each.get_text().strip() for each in row] for row in gradeMat]
+        self.gradeMat = [[row[i] for i in range(len(row)) if i in self.remainList] for row in self.gradeMat]
 
     def clean(self):
         """
