@@ -22,7 +22,7 @@ class Spider(object):
         self.response = self.session.send(self.prepareJwglFirst(), timeout=5)
         print(self.response.url)
 
-        # 实例化验证码识别器对象，识别验证码
+        # 实例化验证码识别器对象
         from classifier import Classifier
         self.classifier = Classifier()
         self.classifier.loadTrainingMat()
@@ -52,7 +52,7 @@ class Spider(object):
 
     def prepareJwglLogin(self):
         """
-        准备登录 jwgl 需要的 request
+        实例化登录 jwgl 需要的 request
         """
         postdata = {
             '__VIEWSTATE': self.getVIEWSTATE(),
