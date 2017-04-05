@@ -135,13 +135,25 @@ class Spider(object):
     def getGrade(self):
         self.response = self.session.send(self.prepareGetGrade(), timeout=5)
         self.response = self.session.send(self.preparePastGrade(), timeout=5)
-        gradeBody = self.response.text
-        self.formatGrade(gradeBody)
+        self.formatGrade(self.response.text)
+
+    def outputGrade(self):
+        self.gradeMat.insert(1, [':------' for i in range(len(self.gradeMat[0]))])
+        with open('grade.md', 'w') as fr:
+            for row in self.gradeMat:
+                fr.write('|')
+                for each in row:
+                    fr.write(each)
+                    fr.write('|')
+                fr.write('\n')
 
     def formatGrade(self, gradeBody):
         from bs4 import BeautifulSoup
+        import re
         soup = BeautifulSoup(gradeBody, 'html.parser')
-        print(soup.br.table)
+        gradeRow = soup.br.table.find_all('tr')
+        gradeMat = [i.find_all('td') for i in gradeRow]
+        self.gradeMat = [[each.get_text().strip() for each in row] for row in gradeMat]
 
     def clean(self):
         self.session.close()
@@ -158,6 +170,7 @@ def main():
     spider = Spider()
     spider.jwglLogin(tryNum=10)
     spider.getGrade()
+    spider.outputGrade()
     spider.clean()
 
 if __name__ == "__main__":
