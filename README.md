@@ -8,6 +8,9 @@
 - `re` for regular expression
 - `BeautifulSoup` for html parser
 
+### Statement
+**Just for study**
+
 ## 正方教务管理系统爬虫
 
 ### 依赖
@@ -17,3 +20,6 @@
 - `Numpy` 用于矩阵以及生成特征库
 - `re` 用于正则表达式
 - `BeautifulSoup` 用于 html 解析器
+
+### 声明
+**仅用于学习用途**
